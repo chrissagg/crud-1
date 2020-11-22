@@ -22,7 +22,7 @@ function eliminarRegistro(){
             });
         });
         nuevoId=lista[0].substr(1);
-        db.transaccion(function(transaccion){
+        db.transaction(function(transaction){
             var sql="DELETE FROM productos WHERE id="+nuevoId+";"
             transaction.executeSql(sql,undefined,function(){
                 alert("Registro borrado satisfactoriamente, por favor actualice la tabla")
@@ -30,28 +30,50 @@ function eliminarRegistro(){
                 alert(err.message);
             })
         })
-    })
+    });
 }
 
-$(function(){
-// funcion para crear la tabla de productos
-    $("#crear").click(function(){
-        db.transaction(function(transaction){
-            var sql="CREATE TABLE productos "+
-            "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "+
-            "item VARCHAR(100) NOT NULL, "+
-            "precio DECIMAL(5,2) NOT NULL)";
-            transaction.executeSql(sql,undefined, function(){
-                alert("Tabla creada satisfactoriamente");
-            }, function(transaction, err){
-                alert(err.message);
-            })
+
+//editar REgistro
+function editar(){
+    $(document).one('click','button[type="button"]', function(event){
+        let id=this.id;
+        var lista=[];
+        $('#listaProductos').each(function(){
+            var celdas=$(this).find('tr,Reg_A'+id);
+            celdas.each(function(){
+                var registro=$(this).find('span');
+                registro.each(function(){
+                    lista.push($(this).html())
+                });
             });
-    });
-    //cargar la lista de productos
-    $("#listar").click(function(){
-        cargarDatos();
-    })
+        });
+        document.getElementById("item").value=lista[1];
+        document.getElementById("precio").value=lista[2].slice(0,-5);
+        nuevoId=lista[0].substr(1);
+})
+}
+
+
+    $(function(){
+    // funcion para crear la tabla de productos
+        $("#crear").click(function(){
+            db.transaction(function(transaction){
+                var sql="CREATE TABLE productos "+
+                "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "+
+                "item VARCHAR(100) NOT NULL, "+
+                "precio DECIMAL(5,2) NOT NULL)";
+                transaction.executeSql(sql,undefined, function(){
+                    alert("Tabla creada satisfactoriamente");
+                }, function(transaction, err){
+                    alert(err.message);
+                })
+                });
+        });
+        //cargar la lista de productos
+        $("#listar").click(function(){
+            cargarDatos();
+        })
 
     //funcion para listar y pintar la tabla de productos en la pagina web
     function cargarDatos(){
@@ -68,7 +90,7 @@ $(function(){
                         var precio = row.precio;
                         $("#listaProductos").append('<tr id="fila'+id+'" class="Reg_A'+id+'"><td><span class="mid">A'+
                         id+'</span></td><td><span>'+item+'</span></td><td><span>'+ 'USD '+
-                        precio+ '</span></td><td><button type="button" id="A'+id+'" class="btn btn-success"><img src="libs/img/editar.png" /></button></td><td><button type="button" id="A'+id+'" class="btn btn-danger" onclick="eliminarRegistro()"><img src="libs/img/delete.png" /></button><td></tr>');
+                        precio+ '</span></td><td><button type="button" id="A'+id+'" class="btn btn-success" onclick="editar()"><img src="libs/img/editar.png" /></button></td><td><button type="button" id="A'+id+'" class="btn btn-danger" onclick="eliminarRegistro()"><img src="libs/img/delete.png" /></button><td></tr>');
                     }
                 } else {
                     $("#listaProductos").append('<tr><td colspan="5" align="center">No existen registros de productos</td></tr>');
@@ -95,6 +117,22 @@ $(function(){
     })
         limpiar();
         cargarDatos();
+    })
+
+    //modificar REgistro
+    $("#borrarTodo").click(function(){
+        var nprod=$("#item").val();
+        var nprecio=$("#precio").val();
+
+        db.transaction(function(transaction){
+            var sql="UPDATE productos SET item='"+nprod+"', precio='"+precio+"' WHERE id="+nuevoId+";"
+            transaction.executeSql(sql,undefined,function(){
+                cargarDatos();
+                limpiar();
+            }, function(transaction, err){
+                alert(err.message)
+            })
+        })
     })
 
     //para borrar toda la lista de registros
